@@ -1,4 +1,4 @@
-import { jsonToHTML, errorPage } from './jsonformatter';
+import { jsonToHTML, errorPage, trimCsrfProtection } from './jsonformatter';
 import { safeStringEncodeNums } from './safe-encode-numbers';
 
 /**
@@ -21,22 +21,25 @@ function transformResponseToJSON(details: chrome.webRequest.WebResponseHeadersDe
 
   const dec = new TextDecoder("utf-8");
   const enc = new TextEncoder();
-  let content = "";
+  let rawContent = "";
 
   filter.ondata = (event: Event & {
     data: ArrayBuffer;
   }) => {
-    content = content + dec.decode(event.data);
+    rawContent = rawContent + dec.decode(event.data);
   };
 
   filter.onstop = (_event: Event) => {
     let outputDoc = '';
 
+    // Trim CSRF protection elements
+    const content = trimCsrfProtection(rawContent);
+
     try {
       const jsonObj = JSON.parse(safeStringEncodeNums(content));
       outputDoc = jsonToHTML(jsonObj, details.url);
     } catch (e) {
-      outputDoc = errorPage(e, content, details.url);
+      outputDoc = errorPage(e, rawContent, details.url);
     }
 
     filter.write(enc.encode(outputDoc));

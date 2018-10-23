@@ -18,6 +18,16 @@ export function errorPage(error: Error, data: string, uri: string) {
   return toHTML(errorPageBody(error, data), uri + ' - Error');
 }
 
+/** Removes prefixes added for CSRF protection (e.g. ")]}',"). */
+export function trimCsrfProtection(rawJson: string) {
+  // Ignore jsonp
+  if (rawJson.indexOf('callback(') === 0) {
+    return rawJson;
+  }
+
+  return rawJson.substring(rawJson.indexOf('{'));
+}
+
 /** Produce an error content for when parsing fails. */
 function errorPageBody(error: Error, data: string) {
   // Escape unicode nulls

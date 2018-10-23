@@ -1,4 +1,4 @@
-import { errorPage, jsonToHTML } from './jsonformatter';
+import { errorPage, jsonToHTML, trimCsrfProtection } from './jsonformatter';
 import { safeStringEncodeNums } from './safe-encode-numbers';
 import { installCollapseEventListeners } from './collapse';
 
@@ -12,14 +12,17 @@ chrome.runtime.sendMessage({}, (response: boolean) => {
   }
 
   // At least in chrome, the JSON is wrapped in a pre tag.
-  const content = document.getElementsByTagName('pre')[0].innerText;
+  const rawContent = document.getElementsByTagName('pre')[0].innerText;
+
+  const content = trimCsrfProtection(rawContent);
+
   let outputDoc = '';
 
   try {
     const jsonObj = JSON.parse(safeStringEncodeNums(content));
     outputDoc = jsonToHTML(jsonObj, document.URL);
   } catch (e) {
-    outputDoc = errorPage(e, content, document.URL);
+    outputDoc = errorPage(e, rawContent, document.URL);
   }
 
   document.documentElement.innerHTML = outputDoc;
