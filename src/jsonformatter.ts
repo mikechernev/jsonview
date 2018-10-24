@@ -25,7 +25,7 @@ export function trimCsrfProtection(rawJson: string) {
     return rawJson;
   }
 
-  return rawJson.substring(rawJson.indexOf('{'));
+  return rawJson.substring(Math.min(rawJson.indexOf('{'), rawJson.indexOf('[')));
 }
 
 /** Produce an error content for when parsing fails. */
